@@ -1,0 +1,49 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    image: omron-management-dev-app:latest
+    restart: unless-stopped
+    container_name: omron-management-dev-app
+    working_dir: /var/www/html
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - ./backend:/var/www/html
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - omron-management-dev
+
+  db:
+    image: postgres:16-alpine
+    container_name: omron-management-dev-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: omron-management
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata-dev:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U laravel -d laravel"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - omron-management-dev
+
+volumes:
+  pgdata-dev:
+
+networks:
+  omron-management-dev:
+    driver: bridge
