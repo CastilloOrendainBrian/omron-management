@@ -1,0 +1,272 @@
+// =========================================================
+// Sistema de Control de Peso - Modelo de datos (PostgreSQL)
+// Laravel + Spatie Permission
+// Generado para dbdiagram.io
+// =========================================================
+
+Enum sex_enum {
+  male
+  female
+}
+
+Enum measurement_source_enum {
+  manual
+  device_sync
+  api
+}
+
+Enum goal_status_enum {
+  active
+  achieved
+  abandoned
+}
+
+Enum activity_level_enum {
+  sedentary
+  light
+  moderate
+  active
+  very_active
+}
+
+// ---------- Laravel: autenticación ----------
+
+Table users {
+  id bigint [pk, increment]
+  name varchar [not null]
+  email varchar [not null, unique]
+  email_verified_at timestamp
+  password varchar [not null]
+  remember_token varchar(100)
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Tabla estándar de Laravel'
+}
+
+Table password_reset_tokens {
+  email varchar [pk]
+  token varchar [not null]
+  created_at timestamp
+}
+
+Table sessions {
+  id varchar [pk]
+  user_id bigint [ref: > users.id, null]
+  ip_address varchar(45)
+  user_agent text
+  payload text [not null]
+  last_activity int [not null]
+}
+
+Table personal_access_tokens {
+  id bigint [pk, increment]
+  tokenable_type varchar [not null]
+  tokenable_id bigint [not null]
+  name varchar [not null]
+  token varchar(64) [not null, unique]
+  abilities text
+  last_used_at timestamp
+  expires_at timestamp
+  created_at timestamp
+  updated_at timestamp
+
+  Note: 'Para tokens de API (Sanctum). Útil si en el futuro hay app móvil'
+}
+
+// ---------- Spatie laravel-permission ----------
+
+Table roles {
+  id bigint [pk, increment]
+  name varchar [not null]
+  guard_name varchar [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table permissions {
+  id bigint [pk, increment]
+  name varchar [not null]
+  guard_name varchar [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table model_has_roles {
+  role_id bigint [ref: > roles.id, not null]
+  model_type varchar [not null]
+  model_id bigint [not null, note: 'Referencia polimórfica a users.id']
+
+  Indexes {
+    (role_id, model_id, model_type) [pk]
+  }
+}
+
+Table model_has_permissions {
+  permission_id bigint [ref: > permissions.id, not null]
+  model_type varchar [not null]
+  model_id bigint [not null, note: 'Referencia polimórfica a users.id']
+
+  Indexes {
+    (permission_id, model_id, model_type) [pk]
+  }
+}
+
+Table role_has_permissions {
+  permission_id bigint [ref: > permissions.id, not null]
+  role_id bigint [ref: > roles.id, not null]
+
+  Indexes {
+    (permission_id, role_id) [pk]
+  }
+}
+
+// ---------- Perfil de usuario (datos demográficos) ----------
+
+Table user_profiles {
+  id bigint [pk, increment]
+  user_id bigint [ref: - users.id, not null, unique]
+  sex sex_enum [not null]
+  birth_date date [not null, note: 'La edad se calcula desde aquí, nunca se guarda fija']
+  height_reference_cm decimal(5,2) [note: 'Estatura de referencia editable por el usuario']
+  activity_level activity_level_enum
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ---------- Dispositivos (báscula(s)) ----------
+
+Table devices {
+  id bigint [pk, increment]
+  user_id bigint [ref: > users.id, null]
+  brand varchar [not null, note: 'Ej. Omron']
+  model varchar [not null, note: 'Ej. HBF-516']
+  serial_number varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ---------- Tabla central de eventos de medición ----------
+
+Table measurement_sessions {
+  id bigint [pk, increment]
+  user_id bigint [ref: > users.id, not null]
+  device_id bigint [ref: > devices.id, null]
+  measured_at timestamp [not null, note: 'Fecha y hora real de la toma de datos']
+  source measurement_source_enum [not null, default: 'manual']
+  notes text
+  created_at timestamp
+  updated_at timestamp
+
+  Indexes {
+    (user_id, measured_at)
+  }
+
+  Note: 'Tabla "hecho". Cada categoría de datos cuelga de aquí en 1:1, permite agregar nuevas categorías sin tocar las existentes'
+}
+
+// ---------- Categoría: antropometría ----------
+
+Table anthropometric_measurements {
+  id bigint [pk, increment]
+  measurement_session_id bigint [ref: - measurement_sessions.id, not null, unique]
+  height_cm decimal(5,2) [not null]
+  weight_kg decimal(6,3) [not null]
+  bmi decimal(4,1) [not null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ---------- Categoría: composición corporal (bioimpedancia) ----------
+
+Table body_composition_measurements {
+  id bigint [pk, increment]
+  measurement_session_id bigint [ref: - measurement_sessions.id, not null, unique]
+  body_fat_percentage decimal(4,1)
+  muscle_percentage decimal(4,1)
+  visceral_fat_level int
+  metabolic_age int [note: 'edad corporal']
+  bmr_kcal int [note: 'ritmo metabólico basal (rm)']
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ---------- Metas ----------
+
+Table goals {
+  id bigint [pk, increment]
+  user_id bigint [ref: > users.id, not null]
+  target_weight_kg decimal(6,3)
+  target_body_fat_percentage decimal(4,1)
+  start_date date [not null]
+  target_date date
+  status goal_status_enum [not null, default: 'active']
+  created_at timestamp
+  updated_at timestamp
+}
+
+// ---------- Futuro: plicometría ----------
+
+Table skinfold_protocols {
+  id bigint [pk, increment]
+  name varchar [not null, note: 'Ej. Jackson-Pollock 3 sitios, 7 sitios, Durnin-Womersley']
+  sites_count int [not null]
+  description text
+}
+
+Table skinfold_sites {
+  id bigint [pk, increment]
+  code varchar [not null, unique, note: 'triceps, subescapular, suprailiaco, abdominal, muslo, pecho, axilar_medio, biceps, pantorrilla']
+  name varchar [not null]
+}
+
+Table skinfold_measurements {
+  id bigint [pk, increment]
+  measurement_session_id bigint [ref: - measurement_sessions.id, not null, unique]
+  skinfold_protocol_id bigint [ref: > skinfold_protocols.id, not null]
+  estimated_body_fat_percentage decimal(4,1)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table skinfold_measurement_details {
+  id bigint [pk, increment]
+  skinfold_measurement_id bigint [ref: > skinfold_measurements.id, not null]
+  skinfold_site_id bigint [ref: > skinfold_sites.id, not null]
+  value_mm decimal(4,1) [not null]
+
+  Indexes {
+    (skinfold_measurement_id, skinfold_site_id) [unique]
+  }
+}
+
+// ---------- Agrupación visual ----------
+
+TableGroup laravel_auth {
+  users
+  password_reset_tokens
+  sessions
+  personal_access_tokens
+}
+
+TableGroup permisos_spatie {
+  roles
+  permissions
+  model_has_roles
+  model_has_permissions
+  role_has_permissions
+}
+
+TableGroup datos_bascula {
+  devices
+  measurement_sessions
+  anthropometric_measurements
+  body_composition_measurements
+}
+
+TableGroup plicometria_futuro {
+  skinfold_protocols
+  skinfold_sites
+  skinfold_measurements
+  skinfold_measurement_details
+}
