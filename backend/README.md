@@ -56,3 +56,44 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Architecture example
+
+```
+app/
+├── Application/        # Casos de uso (orquestación)
+│   └── Example/
+│       └── CreateExampleUseCase.php
+├── Domain/             # Contratos + DTOs (lógica pura, sin dependencias externas)
+│   └── Example/
+│       ├── Contracts/
+│       │   └── ExampleRepositoryInterface.php
+│       └── DTOs/
+│           └── CreateExampleDTO.php
+├── Http/               # Capa de presentación (Controllers, Requests, Resources)
+│   ├── Controllers/
+│   │   └── ExampleController.php
+│   ├── Middleware/
+│   │   └── HandleCors.php
+│   ├── Requests/
+│   │   └── StoreExampleRequest.php
+│   └── Resources/
+│       └── Example/
+│           ├── ExampleCollection.php
+│           └── ExampleResource.php
+├── Infrastructure/     # Implementaciones concretas (repositorios, servicios externos)
+│   ├── Database/
+│   │   └── LaravelTransactionManager.php
+│   ├── Repositories/
+│   │   └── EloquentExampleRepository.php
+│   └── Services/
+│       └── DomPdfService.php
+├── Models/             # Eloquent Models (solo ORM, sin lógica de negocio)
+│   └── Example.php
+├── Notifications/ 
+│   └── WelcomeCredentialsNotification.php
+├── Policies/           # Autorización de Laravel 
+│   └── ProjectPolicy.php
+└── Providers/          # Bindings del Service Container (AppServiceProvider)
+    └── AppServiceProvider.php
+```
