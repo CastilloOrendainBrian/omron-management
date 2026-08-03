@@ -10,6 +10,7 @@ final class DatabaseSeeder extends Seeder
     {
         $this->call([
             RoleAndPermissionSeeder::class,
+            UserSeeder::class,
             SkinfoldProtocolSeeder::class,
             SkinfoldSiteSeeder::class,
         ]);

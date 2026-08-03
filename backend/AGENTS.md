@@ -95,6 +95,8 @@ Detalle completo en `docs/schema.dbml`.
 - **Spatie Permissions** = *qué puede hacer* un rol (p. ej. `create-reports`, `manage-users`).
 - **Laravel Policies** = *sobre qué dato* puede actuar (p. ej. un `user` solo ve/edita sus propias `measurement_sessions`).
 - Ambos mecanismos son **necesarios, no intercambiables**.
+- `HasRoles::hasRole()` **no es variádico** — la firma es `hasRole($roles, ?string $guard = null)`. Para chequear "OR" de varios roles usar `hasRole(['admin', 'super-admin'])` o `hasRole('admin|super-admin')`. Llamarla como `hasRole('admin', 'super-admin')` se interpreta como `$roles='admin'`, `$guard='super-admin'` y siempre retorna `false` (gotcha real que ya mordió).
+- Si tras un `migrate:fresh` los roles parecen no aplicarse, purgar la cache de Spatie con `app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();` o `php artisan cache:clear`.
 
 ## 9. Code standards
 - `declare(strict_types=1);` obligatorio en todo `Domain/` y `Application/`.
