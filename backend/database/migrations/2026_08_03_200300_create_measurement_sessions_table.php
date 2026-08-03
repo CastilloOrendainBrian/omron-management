@@ -19,6 +19,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['user_id', 'measured_at']);
+            $table->softDeletes();
         });
 
         DB::statement("ALTER TABLE measurement_sessions ALTER COLUMN source DROP DEFAULT");

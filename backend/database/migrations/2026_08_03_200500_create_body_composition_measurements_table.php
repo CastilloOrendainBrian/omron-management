@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('metabolic_age')->nullable();
             $table->integer('bmr_kcal')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

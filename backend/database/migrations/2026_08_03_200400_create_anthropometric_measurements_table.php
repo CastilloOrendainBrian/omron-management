@@ -15,6 +15,7 @@ return new class extends Migration
             $table->decimal('weight_kg', 6, 3);
             $table->decimal('bmi', 4, 1);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

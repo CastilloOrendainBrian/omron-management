@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('model');
             $table->string('serial_number')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

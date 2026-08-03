@@ -18,6 +18,7 @@ return new class extends Migration
             $table->date('target_date')->nullable();
             $table->string('status')->default('active');
             $table->timestamps();
+            $table->softDeletes();
         });
 
         DB::statement("ALTER TABLE goals ALTER COLUMN status DROP DEFAULT");

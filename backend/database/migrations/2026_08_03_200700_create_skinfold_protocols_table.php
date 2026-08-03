@@ -13,6 +13,7 @@ return new class extends Migration
             $table->string('name');
             $table->integer('sites_count');
             $table->text('description')->nullable();
+            $table->softDeletes();
         });
     }
 

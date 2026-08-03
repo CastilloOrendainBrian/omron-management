@@ -88,6 +88,8 @@ Detalle completo en `docs/schema.dbml`.
 - `roles`, `permissions`, `model_has_roles`, `model_has_permissions`, `role_has_permissions` — Spatie.
 - Enums Postgres: `sex_enum`, `measurement_source_enum`, `goal_status_enum`, `activity_level_enum`.
 
+**SoftDeletes obligatorio**: toda tabla del proyecto tiene columna `deleted_at` y su modelo declara `use SoftDeletes;` + `use Illuminate\Database\Eloquent\SoftDeletes;`. Aplica también a tablas de referencia (`skinfold_protocols`, `skinfold_sites`). Excluidas: tablas internas de Laravel (`cache`, `jobs`, `sessions`, `password_reset_tokens`), Sanctum (`personal_access_tokens`) y Spatie — son transitorias o gestionadas por paquetes.
+
 ## 8. Auth & permissions
 - Roles vía Spatie: `super-admin`, `admin`, `user`. **No** agregar `coach` / `nutritionist` salvo que se pida explícitamente.
 - **Spatie Permissions** = *qué puede hacer* un rol (p. ej. `create-reports`, `manage-users`).

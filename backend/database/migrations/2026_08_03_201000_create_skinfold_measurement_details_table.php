@@ -15,6 +15,7 @@ return new class extends Migration
             $table->decimal('value_mm', 4, 1);
 
             $table->unique(['skinfold_measurement_id', 'skinfold_site_id']);
+            $table->softDeletes();
         });
     }
 

@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignId('skinfold_protocol_id')->constrained('skinfold_protocols')->restrictOnDelete();
             $table->decimal('estimated_body_fat_percentage', 4, 1)->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

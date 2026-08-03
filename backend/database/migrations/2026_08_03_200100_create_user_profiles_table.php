@@ -17,6 +17,7 @@ return new class extends Migration
             $table->decimal('height_reference_cm', 5, 2)->nullable();
             $table->string('activity_level')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         DB::statement("ALTER TABLE user_profiles ALTER COLUMN sex TYPE sex_enum USING sex::sex_enum");
