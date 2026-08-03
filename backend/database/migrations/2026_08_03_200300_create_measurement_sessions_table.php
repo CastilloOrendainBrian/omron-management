@@ -21,12 +21,15 @@ return new class extends Migration
             $table->index(['user_id', 'measured_at']);
         });
 
+        DB::statement("ALTER TABLE measurement_sessions ALTER COLUMN source DROP DEFAULT");
         DB::statement("ALTER TABLE measurement_sessions ALTER COLUMN source TYPE measurement_source_enum USING source::measurement_source_enum");
+        DB::statement("ALTER TABLE measurement_sessions ALTER COLUMN source SET DEFAULT 'manual'");
         DB::statement("ALTER TABLE measurement_sessions ALTER COLUMN source SET NOT NULL");
     }
 
     public function down(): void
     {
+        DB::statement("ALTER TABLE measurement_sessions ALTER COLUMN source DROP DEFAULT");
         DB::statement("ALTER TABLE measurement_sessions ALTER COLUMN source TYPE varchar USING source::varchar");
         Schema::dropIfExists('measurement_sessions');
     }

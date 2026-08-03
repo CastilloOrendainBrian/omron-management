@@ -20,12 +20,15 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        DB::statement("ALTER TABLE goals ALTER COLUMN status DROP DEFAULT");
         DB::statement("ALTER TABLE goals ALTER COLUMN status TYPE goal_status_enum USING status::goal_status_enum");
+        DB::statement("ALTER TABLE goals ALTER COLUMN status SET DEFAULT 'active'");
         DB::statement("ALTER TABLE goals ALTER COLUMN status SET NOT NULL");
     }
 
     public function down(): void
     {
+        DB::statement("ALTER TABLE goals ALTER COLUMN status DROP DEFAULT");
         DB::statement("ALTER TABLE goals ALTER COLUMN status TYPE varchar USING status::varchar");
         Schema::dropIfExists('goals');
     }
