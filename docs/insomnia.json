@@ -21,13 +21,58 @@
         "anthropometric_measurement_id": "1",
         "body_composition_measurement_id": "1",
         "device_id": "1",
-        "goal_id": "1"
+        "goal_id": "1",
+        "user_id": "1"
       },
       "dataPropertyOrder": {
-        "&": ["base_url", "token", "anthropometric_measurement_id", "body_composition_measurement_id", "device_id", "goal_id"]
+        "&": ["base_url", "token", "anthropometric_measurement_id", "body_composition_measurement_id", "device_id", "goal_id", "user_id"]
       },
       "color": "#7d69cb",
       "isPrivate": false
+    },
+    {
+      "_id": "fld_users",
+      "_type": "request_group",
+      "parentId": "wrk_omron",
+      "name": "Users",
+      "description": "Composite use cases for User + UserProfile. Two endpoints: register a new user with their profile in a single transaction (POST), and update an existing user and their profile together (PUT). Both run in DB::transaction so the user and profile are created/updated atomically. The register endpoint is admin-only (create policy); the update endpoint follows the standard update policy (self or admin)."
+    },
+    {
+      "_id": "req_users_register",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "Register User with Profile",
+      "description": "POST /api/users/register — composite create. Body: name (string, required), email (string, required, unique), password (string, required, min 8), sex (male|female, required), birth_date (date, required), height_reference_cm (float, optional, 0..300), activity_level (sedentary|light|moderate|active|very_active, optional). Creates the User and the UserProfile in a single transaction. Requires create policy (admin).",
+      "method": "POST",
+      "url": "{{ base_url }}/api/users/register",
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Accept", "value": "application/json"}
+      ],
+      "parameters": [],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"password123\",\n  \"sex\": \"female\",\n  \"birth_date\": \"1990-05-10\",\n  \"height_reference_cm\": 165.00,\n  \"activity_level\": \"moderate\"\n}"
+      },
+      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
+      "metaSortKey": -1
+    },
+    {
+      "_id": "req_users_update_with_profile",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "Update User with Profile",
+      "description": "PUT /api/users/{user}/with-profile — composite update. All body fields optional (sometimes): name, email (unique excluding self), password (min 8), sex, birth_date, height_reference_cm, activity_level. Updates the User and the UserProfile in a single transaction. If profile fields are provided and the profile doesn't exist, a new profile is created (requires sex and birth_date). If no profile fields are provided, only the user is updated. Path: set `user_id` env var. Soft-deleted returns 404. Requires update policy (self or admin).",
+      "method": "PUT",
+      "url": "{{ base_url }}/api/users/{{ user_id }}/with-profile",
+      "headers": [
+        {"name": "Content-Type", "value": "application/json"},
+        {"name": "Accept", "value": "application/json"}
+      ],
+      "parameters": [],
+      "body": {"mimeType": "application/json", "text": "{\n  \"name\": \"Jane D.\",\n  \"activity_level\": \"active\"\n}"},
+      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
+      "metaSortKey": -2
     },
     {
       "_id": "fld_anthropometric_measurements",

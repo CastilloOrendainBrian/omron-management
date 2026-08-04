@@ -9,11 +9,15 @@ use App\Http\Controllers\SkinfoldProtocolController;
 use App\Http\Controllers\SkinfoldSiteController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserProfileController;
+use App\Http\Controllers\UserRegistrationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/user', fn (Request $request) => $request->user());
+
+    Route::post('users/register', [UserRegistrationController::class, 'register']);
+    Route::put('users/{user}/with-profile', [UserRegistrationController::class, 'updateWithProfile']);
 
     Route::apiResource('users', UserController::class);
 
