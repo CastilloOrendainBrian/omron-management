@@ -6,6 +6,7 @@ namespace App\Infrastructure\User\Repositories;
 
 use App\Domain\User\Contracts\UserRepositoryInterface;
 use App\Domain\User\DTOs\CreateUserDTO;
+use App\Domain\User\DTOs\ListUsersDTO;
 use App\Domain\User\DTOs\UpdateUserDTO;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -22,11 +23,13 @@ final class EloquentUserRepository implements UserRepositoryInterface
         return User::where('email', $email)->first();
     }
 
-    public function paginate(int $perPage = 25): LengthAwarePaginator
+    public function paginate(ListUsersDTO $dto): LengthAwarePaginator
     {
         return User::query()
+            ->when($dto->name !== null && $dto->name !== '', fn ($q) => $q->where('name', 'ilike', '%' . $dto->name . '%'))
+            ->when($dto->email !== null && $dto->email !== '', fn ($q) => $q->where('email', 'ilike', '%' . $dto->email . '%'))
             ->orderByDesc('created_at')
-            ->paginate($perPage);
+            ->paginate($dto->perPage);
     }
 
     public function create(CreateUserDTO $dto): User

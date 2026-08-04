@@ -9,19 +9,18 @@ use App\Application\User\Commands\DeleteUserUseCase;
 use App\Application\User\Commands\UpdateUserUseCase;
 use App\Application\User\Queries\ListUsersUseCase;
 use App\Application\User\Queries\ShowUserUseCase;
+use App\Http\Requests\ListUsersRequest;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 final class UserController extends Controller
 {
-    public function index(Request $request, ListUsersUseCase $useCase): JsonResponse
+    public function index(ListUsersRequest $request, ListUsersUseCase $useCase): JsonResponse
     {
-        $perPage = max(1, min((int) $request->query('per_page', 25), 100));
-        $users = $useCase->execute($perPage);
+        $users = $useCase->execute($request->toDto());
 
         return response()->json([
             'success' => true,

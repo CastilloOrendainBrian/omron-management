@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Application\User\Queries;
 
 use App\Domain\User\Contracts\UserRepositoryInterface;
+use App\Domain\User\DTOs\ListUsersDTO;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 final readonly class ListUsersUseCase
@@ -14,8 +15,8 @@ final readonly class ListUsersUseCase
     ) {
     }
 
-    public function execute(int $perPage = 25): LengthAwarePaginator
+    public function execute(ListUsersDTO $dto): LengthAwarePaginator
     {
-        return $this->users->paginate($perPage);
+        return $this->users->paginate($dto);
     }
 }
