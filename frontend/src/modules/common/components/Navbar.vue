@@ -21,7 +21,7 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { user } = storeToRefs(authStore)
+const { user, isAuthenticated } = storeToRefs(authStore)
 
 const userMenuOpen = ref(false)
 
@@ -50,7 +50,7 @@ function getInitials(name: string | null | undefined): string {
 
 <template>
   <div
-    class="py-2 px-6 bg-surface-sidebar flex items-center shadow-sm shadow-stone-300/40 sticky top-0 left-0 z-30"
+    class="py-2 px-6 bg-surface-sidebar flex items-center shadow-sm shadow-stone-300/40 shrink-0 z-30"
   >
     <button
       v-if="showMenuToggle"
@@ -62,7 +62,10 @@ function getInitials(name: string | null | undefined): string {
       <i class="ri-menu-line" />
     </button>
 
-    <RouterLink :to="{ name: 'home' }" class="ml-2 md:ml-0 font-semibold text-stone-800 text-sm">
+    <RouterLink
+      :to="isAuthenticated ? { name: 'dashboard' } : { name: 'home' }"
+      class="ml-2 md:ml-0 font-semibold text-stone-800 text-sm"
+    >
       {{ brand }}
     </RouterLink>
 
@@ -87,7 +90,7 @@ function getInitials(name: string | null | undefined): string {
               aria-hidden="true"
             />
           </div>
-          <div class="p-2 hidden md:block text-left">
+          <div class="p-2 hidden xl:block text-left min-w-0 max-w-[14rem] truncate">
             <h2 class="text-sm font-semibold text-stone-800">
               {{ user?.name ?? 'Invitado' }}
             </h2>

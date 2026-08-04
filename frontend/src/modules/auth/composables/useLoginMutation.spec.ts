@@ -62,6 +62,7 @@ function mountMutationHost() {
 describe('useLoginMutation', () => {
   beforeEach(async () => {
     setActivePinia(createPinia())
+    sessionStorage.clear()
     vi.clearAllMocks()
   })
 

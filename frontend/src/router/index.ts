@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import authRoutes from '@/modules/auth/routes/authRoutes'
+import adminRoutes from '@/modules/admin/routes/adminRoutes'
+import dashboardRoutes from '@/modules/dashboard/routes/dashboardRoutes'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -8,6 +10,8 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/HomeView.vue'),
   },
   ...authRoutes,
+  ...dashboardRoutes,
+  ...adminRoutes,
   {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
