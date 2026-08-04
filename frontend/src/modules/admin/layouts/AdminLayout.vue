@@ -8,9 +8,11 @@ const adminNav: SidebarGroup[] = [
     title: 'Administración',
     items: [
       { label: 'Dashboard', to: { name: 'admin-dashboard' }, icon: 'ri-home-2-line' },
-      { label: 'Usuarios', to: { name: 'admin-users' }, icon: 'bx bx-user' },
-      { label: 'Mediciones', to: { name: 'admin-measurements' }, icon: 'bx bx-list-ul' },
+      { label: 'Usuarios', to: { name: 'admin-users' }, icon: 'ri-team-line' },
+      { label: 'Perfiles', to: { name: 'admin-profiles' }, icon: 'ri-user-settings-line' },
       { label: 'Metas', to: { name: 'admin-goals' }, icon: 'bx bx-target-lock' },
+      { label: 'Dispositivos', to: { name: 'admin-devices' }, icon: 'ri-scales-2-line' },
+      { label: 'Mediciones', to: { name: 'admin-measurements' }, icon: 'bx bx-pulse' },
     ],
   },
 ]
