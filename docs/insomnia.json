@@ -1,7 +1,7 @@
 {
-  "__type": "export",
-  "__export_format": 4,
   "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-08-04T00:00:00.000Z",
   "resources": [
     {
       "_id": "wrk_omron",
@@ -18,29 +18,29 @@
       "data": {
         "base_url": "http://localhost:8000",
         "token": "",
-        "skinfold_protocol_id": "1"
+        "skinfold_measurement_id": "1"
       },
       "dataPropertyOrder": {
-        "&": ["base_url", "token", "skinfold_protocol_id"]
+        "&": ["base_url", "token", "skinfold_measurement_id"]
       },
       "color": "#7d69cb",
       "isPrivate": false
     },
     {
-      "_id": "fld_skinfold_protocols",
+      "_id": "fld_skinfold_measurements",
       "_type": "request_group",
       "parentId": "wrk_omron",
-      "name": "Skinfold Protocols",
-      "description": "CRUD for the SkinfoldProtocol reference table (e.g. Jackson-Pollock 3, Jackson-Pollock 7, Durnin-Womersley). All endpoints require auth:sanctum (Bearer token). Set the `token` env var to a Sanctum-issued personal access token. Authz: viewAny/view are open to any authenticated user (reference data is read often from forms); create/update require admin/super-admin; delete requires super-admin only."
+      "name": "Skinfold Measurements",
+      "description": "CRUD for the SkinfoldMeasurement resource. This is a parent-child resource: each measurement has multiple details (one per site). All endpoints require auth:sanctum (Bearer token). Set the `token` env var to a Sanctum-issued personal access token. Authz: viewAny is admin-only; view/update are self (owner of the measurement_session) or admin; delete is self or super-admin; create is any authenticated user (validated against the measurement_session ownership)."
     },
     {
-      "_id": "req_skinfold_protocols_index",
+      "_id": "req_skinfold_measurements_index",
       "_type": "request",
-      "parentId": "fld_skinfold_protocols",
-      "name": "List Skinfold Protocols",
-      "description": "GET /api/skinfold-protocols — paginated list with filters. Query params (all optional): per_page (int 1..100, default 25), page (int >=1, default 1), name (string, ilike %term%), sites_count (int 1..50, exact match). Results are ordered by `sites_count` ASC then `name` ASC (reference data, not by date). Filters AND together. Open to any authenticated user.",
+      "parentId": "fld_skinfold_measurements",
+      "name": "List Skinfold Measurements",
+      "description": "GET /api/skinfold-measurements — paginated list with filters. Query params (all optional): per_page (int 1..100, default 25), page (int >=1, default 1), measurement_session_id (int, exact match), skinfold_protocol_id (int, exact match). Results are ordered by created_at DESC. Filters AND together. Requires viewAny policy (admin/super-admin only).",
       "method": "GET",
-      "url": "{{ base_url }}/api/skinfold-protocols",
+      "url": "{{ base_url }}/api/skinfold-measurements",
       "headers": [
         {
           "name": "Accept",
@@ -59,13 +59,13 @@
           "disabled": true
         },
         {
-          "name": "name",
-          "value": "Jackson",
+          "name": "measurement_session_id",
+          "value": "1",
           "disabled": true
         },
         {
-          "name": "sites_count",
-          "value": "3",
+          "name": "skinfold_protocol_id",
+          "value": "1",
           "disabled": true
         }
       ],
@@ -78,13 +78,13 @@
       "metaSortKey": -1
     },
     {
-      "_id": "req_skinfold_protocols_store",
+      "_id": "req_skinfold_measurements_store",
       "_type": "request",
-      "parentId": "fld_skinfold_protocols",
-      "name": "Create Skinfold Protocol",
-      "description": "POST /api/skinfold-protocols — body fields: name (string, required, max 255, must be unique), sites_count (int, required, 1..50), description (string, optional, nullable). Returns 422 on duplicate name or validation failure. Requires `create` policy (admin/super-admin).",
+      "parentId": "fld_skinfold_measurements",
+      "name": "Create Skinfold Measurement",
+      "description": "POST /api/skinfold-measurements — body fields: measurement_session_id (int, required, must exist), skinfold_protocol_id (int, required, must exist), estimated_body_fat_percentage (float, optional, nullable, 0..99.9), details (array, required, min 1 element). Each detail must have: skinfold_site_id (int, required, must exist), value_mm (float, required, 0..999.9). Returns 422 on validation failure. The measurement_session must belong to the authenticated user (or user must be admin).",
       "method": "POST",
-      "url": "{{ base_url }}/api/skinfold-protocols",
+      "url": "{{ base_url }}/api/skinfold-measurements",
       "headers": [
         {
           "name": "Content-Type",
@@ -98,7 +98,7 @@
       "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"name\": \"Yuhasz 3\",\n  \"sites_count\": 3,\n  \"description\": \"Plicometría de 3 sitios para mujeres\"\n}"
+        "text": "{\n  \"measurement_session_id\": 1,\n  \"skinfold_protocol_id\": 1,\n  \"estimated_body_fat_percentage\": 18.5,\n  \"details\": [\n    {\n      \"skinfold_site_id\": 1,\n      \"value_mm\": 12.5\n    },\n    {\n      \"skinfold_site_id\": 2,\n      \"value_mm\": 15.0\n    },\n    {\n      \"skinfold_site_id\": 3,\n      \"value_mm\": 10.0\n    }\n  ]\n}"
       },
       "authentication": {
         "type": "bearer",
@@ -108,13 +108,13 @@
       "metaSortKey": -2
     },
     {
-      "_id": "req_skinfold_protocols_show",
+      "_id": "req_skinfold_measurements_show",
       "_type": "request",
-      "parentId": "fld_skinfold_protocols",
-      "name": "Show Skinfold Protocol",
-      "description": "GET /api/skinfold-protocols/{skinfold_protocol} — returns the protocol. Path: set `skinfold_protocol_id` env var or replace `{skinfold_protocol_id}` in the URL. Soft-deleted protocols return 404. Open to any authenticated user.",
+      "parentId": "fld_skinfold_measurements",
+      "name": "Show Skinfold Measurement",
+      "description": "GET /api/skinfold-measurements/{skinfold_measurement} — returns the measurement with eager-loaded details (including site info) and protocol. Path: set `skinfold_measurement_id` env var or replace `{skinfold_measurement_id}` in the URL. Soft-deleted measurements return 404. Requires view policy (self or admin).",
       "method": "GET",
-      "url": "{{ base_url }}/api/skinfold-protocols/{{ skinfold_protocol_id }}",
+      "url": "{{ base_url }}/api/skinfold-measurements/{{ skinfold_measurement_id }}",
       "headers": [
         {
           "name": "Accept",
@@ -131,13 +131,13 @@
       "metaSortKey": -3
     },
     {
-      "_id": "req_skinfold_protocols_update",
+      "_id": "req_skinfold_measurements_update",
       "_type": "request",
-      "parentId": "fld_skinfold_protocols",
-      "name": "Update Skinfold Protocol",
-      "description": "PUT/PATCH /api/skinfold-protocols/{skinfold_protocol} — all body fields optional (`sometimes`). On name change, the unique check excludes the current protocol (so you can re-send the same name without conflict). Soft-deleted protocols return 404. Requires `update` policy (admin/super-admin).",
+      "parentId": "fld_skinfold_measurements",
+      "name": "Update Skinfold Measurement",
+      "description": "PUT/PATCH /api/skinfold-measurements/{skinfold_measurement} — all body fields optional (sometimes). estimated_body_fat_percentage (float, nullable, 0..99.9), details (array, if provided replaces all existing details). Each detail must have: skinfold_site_id (int, required, must exist), value_mm (float, required, 0..999.9). Soft-deleted measurements return 404. Requires update policy (self or admin).",
       "method": "PUT",
-      "url": "{{ base_url }}/api/skinfold-protocols/{{ skinfold_protocol_id }}",
+      "url": "{{ base_url }}/api/skinfold-measurements/{{ skinfold_measurement_id }}",
       "headers": [
         {
           "name": "Content-Type",
@@ -151,7 +151,7 @@
       "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"description\": \"Descripción actualizada\"\n}"
+        "text": "{\n  \"estimated_body_fat_percentage\": 19.0,\n  \"details\": [\n    {\n      \"skinfold_site_id\": 1,\n      \"value_mm\": 13.0\n    },\n    {\n      \"skinfold_site_id\": 2,\n      \"value_mm\": 16.0\n    }\n  ]\n}"
       },
       "authentication": {
         "type": "bearer",
@@ -161,13 +161,13 @@
       "metaSortKey": -4
     },
     {
-      "_id": "req_skinfold_protocols_destroy",
+      "_id": "req_skinfold_measurements_destroy",
       "_type": "request",
-      "parentId": "fld_skinfold_protocols",
-      "name": "Delete Skinfold Protocol",
-      "description": "DELETE /api/skinfold-protocols/{skinfold_protocol} — soft delete (sets `deleted_at`). The protocol stays in the DB but is hidden by the SoftDeletes global scope. WARNING: this resource is referenced by `skinfold_measurements.skinfold_protocol_id` with `restrictOnDelete`; soft delete is safe, but a hard delete (forceDelete in tinker) will fail. Requires `delete` policy (super-admin only — admins are denied).",
+      "parentId": "fld_skinfold_measurements",
+      "name": "Delete Skinfold Measurement",
+      "description": "DELETE /api/skinfold-measurements/{skinfold_measurement} — soft delete (sets deleted_at). The measurement and its details stay in the DB but are hidden by the SoftDeletes global scope. Requires delete policy (self or super-admin).",
       "method": "DELETE",
-      "url": "{{ base_url }}/api/skinfold-protocols/{{ skinfold_protocol_id }}",
+      "url": "{{ base_url }}/api/skinfold-measurements/{{ skinfold_measurement_id }}",
       "headers": [
         {
           "name": "Accept",

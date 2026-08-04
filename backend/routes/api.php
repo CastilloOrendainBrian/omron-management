@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SkinfoldMeasurementController;
 use App\Http\Controllers\SkinfoldProtocolController;
 use App\Http\Controllers\SkinfoldSiteController;
 use App\Http\Controllers\UserController;
@@ -18,4 +19,6 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::apiResource('skinfold-sites', SkinfoldSiteController::class);
 
     Route::apiResource('skinfold-protocols', SkinfoldProtocolController::class);
+
+    Route::apiResource('skinfold-measurements', SkinfoldMeasurementController::class);
 });
