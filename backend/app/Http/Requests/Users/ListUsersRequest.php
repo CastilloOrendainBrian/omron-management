@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Users;
 
-use App\Domain\SkinfoldSite\DTOs\ListSkinfoldSitesDTO;
-use App\Models\SkinfoldSite;
+use App\Domain\User\DTOs\ListUsersDTO;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
-final class ListSkinfoldSitesRequest extends FormRequest
+final class ListUsersRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('viewAny', SkinfoldSite::class) ?? false;
+        return $this->user()?->can('viewAny', User::class) ?? false;
     }
 
     public function rules(): array
@@ -20,17 +20,17 @@ final class ListSkinfoldSitesRequest extends FormRequest
         return [
             'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
             'page' => ['sometimes', 'integer', 'min:1'],
-            'code' => ['sometimes', 'string', 'max:50'],
             'name' => ['sometimes', 'string', 'max:255'],
+            'email' => ['sometimes', 'string', 'max:255'],
         ];
     }
 
-    public function toDto(): ListSkinfoldSitesDTO
+    public function toDto(): ListUsersDTO
     {
-        return new ListSkinfoldSitesDTO(
+        return new ListUsersDTO(
             perPage: (int) ($this->validated('per_page') ?? 25),
-            code: $this->validated('code'),
             name: $this->validated('name'),
+            email: $this->validated('email'),
         );
     }
 }

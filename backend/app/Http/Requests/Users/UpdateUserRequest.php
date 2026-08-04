@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Users;
 
 use App\Domain\User\DTOs\UpdateUserDTO;
 use App\Models\User;

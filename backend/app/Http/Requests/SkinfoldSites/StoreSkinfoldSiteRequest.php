@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\SkinfoldSites;
 
 use App\Domain\SkinfoldSite\DTOs\CreateSkinfoldSiteDTO;
 use App\Models\SkinfoldSite;

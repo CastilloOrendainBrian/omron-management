@@ -56,7 +56,11 @@ Reglas no negociables:
 app/
 ├── Application/<Feature>/{Commands,Queries}/<Verb><Entity>UseCase.php
 ├── Domain/{Shared,<Feature>}/{Contracts,DTOs,Enums}/
-├── Http/{Controllers,Middleware,Requests,Resources/<Entity>}/
+├── Http/
+│   ├── Controllers/<Entity>Controller.php
+│   ├── Middleware/
+│   ├── Requests/<Entity>/{Store,Update,List}<Entity>Request.php
+│   └── Resources/<Entity>/
 ├── Infrastructure/{Database,<Feature>/{Repositories,Services}}/
 ├── Models/<Entity>.php
 ├── Policies/<Entity>Policy.php
