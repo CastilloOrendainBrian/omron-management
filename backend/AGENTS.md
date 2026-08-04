@@ -57,10 +57,10 @@ app/
 ├── Application/<Feature>/{Commands,Queries}/<Verb><Entity>UseCase.php
 ├── Domain/{Shared,<Feature>}/{Contracts,DTOs,Enums}/
 ├── Http/
-│   ├── Controllers/<Entity>Controller.php
+│   ├── Controllers/<Entity>Controller.php             # flat: 1 controller por feature
 │   ├── Middleware/
 │   ├── Requests/<Entity>/{Store,Update,List}<Entity>Request.php
-│   └── Resources/<Entity>/
+│   └── Resources/<Entity>/<Entity>Resource.php
 ├── Infrastructure/{Database,<Feature>/{Repositories,Services}}/
 ├── Models/<Entity>.php
 ├── Policies/<Entity>Policy.php

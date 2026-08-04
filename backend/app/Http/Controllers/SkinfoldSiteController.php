@@ -12,7 +12,7 @@ use App\Application\SkinfoldSite\Queries\ShowSkinfoldSiteUseCase;
 use App\Http\Requests\SkinfoldSites\ListSkinfoldSitesRequest;
 use App\Http\Requests\SkinfoldSites\StoreSkinfoldSiteRequest;
 use App\Http\Requests\SkinfoldSites\UpdateSkinfoldSiteRequest;
-use App\Http\Resources\SkinfoldSiteResource;
+use App\Http\Resources\SkinfoldSites\SkinfoldSiteResource;
 use App\Models\SkinfoldSite;
 use Illuminate\Http\JsonResponse;
 

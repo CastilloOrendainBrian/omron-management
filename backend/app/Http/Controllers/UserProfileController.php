@@ -12,7 +12,7 @@ use App\Application\UserProfile\Queries\ShowUserProfileUseCase;
 use App\Http\Requests\UserProfiles\ListUserProfilesRequest;
 use App\Http\Requests\UserProfiles\StoreUserProfileRequest;
 use App\Http\Requests\UserProfiles\UpdateUserProfileRequest;
-use App\Http\Resources\UserProfileResource;
+use App\Http\Resources\UserProfiles\UserProfileResource;
 use App\Models\UserProfile;
 use Illuminate\Http\JsonResponse;
 

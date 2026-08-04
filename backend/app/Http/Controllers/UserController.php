@@ -12,7 +12,7 @@ use App\Application\User\Queries\ShowUserUseCase;
 use App\Http\Requests\Users\ListUsersRequest;
 use App\Http\Requests\Users\StoreUserRequest;
 use App\Http\Requests\Users\UpdateUserRequest;
-use App\Http\Resources\UserResource;
+use App\Http\Resources\Users\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 

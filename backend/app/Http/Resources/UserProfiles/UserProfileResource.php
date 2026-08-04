@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Resources;
+namespace App\Http\Resources\UserProfiles;
 
 use App\Models\UserProfile;
 use Illuminate\Http\Request;
