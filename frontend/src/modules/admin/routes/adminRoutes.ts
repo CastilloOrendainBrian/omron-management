@@ -86,9 +86,63 @@ const adminRoutes: RouteRecordRaw[] = [
         meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
       },
       {
-        path: 'measurements',
-        name: 'admin-measurements',
-        component: () => import('@/modules/admin/views/ComingSoonView.vue'),
+        path: 'anthropometric',
+        name: 'admin-anthropometric',
+        component: () =>
+          import('@/modules/admin/anthropometric/views/AnthropometricMeasurementListView.vue'),
+        meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
+      },
+      {
+        path: 'anthropometric/new',
+        name: 'admin-anthropometric-new',
+        component: () =>
+          import('@/modules/admin/anthropometric/views/AnthropometricMeasurementFormView.vue'),
+        meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
+      },
+      {
+        path: 'anthropometric/:id/edit',
+        name: 'admin-anthropometric-edit',
+        component: () =>
+          import('@/modules/admin/anthropometric/views/AnthropometricMeasurementFormView.vue'),
+        meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
+      },
+      {
+        path: 'body-composition',
+        name: 'admin-body-composition',
+        component: () =>
+          import('@/modules/admin/body-composition/views/BodyCompositionMeasurementListView.vue'),
+        meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
+      },
+      {
+        path: 'body-composition/new',
+        name: 'admin-body-composition-new',
+        component: () =>
+          import('@/modules/admin/body-composition/views/BodyCompositionMeasurementFormView.vue'),
+        meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
+      },
+      {
+        path: 'body-composition/:id/edit',
+        name: 'admin-body-composition-edit',
+        component: () =>
+          import('@/modules/admin/body-composition/views/BodyCompositionMeasurementFormView.vue'),
+        meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
+      },
+      {
+        path: 'skinfold',
+        name: 'admin-skinfold',
+        component: () => import('@/modules/admin/skinfold/views/SkinfoldMeasurementListView.vue'),
+        meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
+      },
+      {
+        path: 'skinfold/new',
+        name: 'admin-skinfold-new',
+        component: () => import('@/modules/admin/skinfold/views/SkinfoldMeasurementFormView.vue'),
+        meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
+      },
+      {
+        path: 'skinfold/:id/edit',
+        name: 'admin-skinfold-edit',
+        component: () => import('@/modules/admin/skinfold/views/SkinfoldMeasurementFormView.vue'),
         meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
       },
     ],

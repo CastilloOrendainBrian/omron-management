@@ -12,7 +12,26 @@ const adminNav: SidebarGroup[] = [
       { label: 'Perfiles', to: { name: 'admin-profiles' }, icon: 'ri-user-settings-line' },
       { label: 'Metas', to: { name: 'admin-goals' }, icon: 'bx bx-target-lock' },
       { label: 'Dispositivos', to: { name: 'admin-devices' }, icon: 'ri-scales-2-line' },
-      { label: 'Mediciones', to: { name: 'admin-measurements' }, icon: 'bx bx-pulse' },
+    ],
+  },
+  {
+    title: 'Mediciones',
+    items: [
+      {
+        label: 'Antropometría',
+        to: { name: 'admin-anthropometric' },
+        icon: 'ri-scales-2-line',
+      },
+      {
+        label: 'Composición corporal',
+        to: { name: 'admin-body-composition' },
+        icon: 'ri-heart-pulse-line',
+      },
+      {
+        label: 'Plicometría',
+        to: { name: 'admin-skinfold' },
+        icon: 'ri-pencil-ruler-2-line',
+      },
     ],
   },
 ]
