@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\Auth\Exceptions\InvalidCredentialsException;
+use App\Domain\Auth\Exceptions\InvalidPasswordResetTokenException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -19,4 +21,27 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        $exceptions->render(function (InvalidCredentialsException $e, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json([
+                'message' => 'Invalid credentials.',
+            ], 401);
+        });
+
+        $exceptions->render(function (InvalidPasswordResetTokenException $e, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json([
+                'message' => 'The password reset token is invalid or has expired.',
+                'errors' => [
+                    'token' => ['The password reset token is invalid or has expired.'],
+                ],
+            ], 422);
+        });
     })->create();

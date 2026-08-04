@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Domain\AnthropometricMeasurement\Contracts\AnthropometricMeasurementRepositoryInterface;
+use App\Domain\Auth\Contracts\AuthTokenServiceInterface;
+use App\Domain\Auth\Contracts\PasswordResetServiceInterface;
+use App\Domain\Auth\Contracts\PasswordVerifierInterface;
 use App\Domain\BodyCompositionMeasurement\Contracts\BodyCompositionMeasurementRepositoryInterface;
 use App\Domain\Device\Contracts\DeviceRepositoryInterface;
 use App\Domain\Goal\Contracts\GoalRepositoryInterface;
@@ -14,6 +17,9 @@ use App\Domain\SkinfoldSite\Contracts\SkinfoldSiteRepositoryInterface;
 use App\Domain\User\Contracts\UserRepositoryInterface;
 use App\Domain\UserProfile\Contracts\UserProfileRepositoryInterface;
 use App\Infrastructure\AnthropometricMeasurement\Repositories\EloquentAnthropometricMeasurementRepository;
+use App\Infrastructure\Auth\Services\LaravelPasswordResetService;
+use App\Infrastructure\Auth\Services\LaravelPasswordVerifier;
+use App\Infrastructure\Auth\Services\SanctumAuthTokenService;
 use App\Infrastructure\BodyCompositionMeasurement\Repositories\EloquentBodyCompositionMeasurementRepository;
 use App\Infrastructure\Device\Repositories\EloquentDeviceRepository;
 use App\Infrastructure\Goal\Repositories\EloquentGoalRepository;
@@ -37,5 +43,8 @@ final class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(BodyCompositionMeasurementRepositoryInterface::class, EloquentBodyCompositionMeasurementRepository::class);
         $this->app->bind(DeviceRepositoryInterface::class, EloquentDeviceRepository::class);
         $this->app->bind(GoalRepositoryInterface::class, EloquentGoalRepository::class);
+        $this->app->bind(AuthTokenServiceInterface::class, SanctumAuthTokenService::class);
+        $this->app->bind(PasswordResetServiceInterface::class, LaravelPasswordResetService::class);
+        $this->app->bind(PasswordVerifierInterface::class, LaravelPasswordVerifier::class);
     }
 }

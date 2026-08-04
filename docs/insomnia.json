@@ -17,34 +17,29 @@
       "name": "Base Environment",
       "data": {
         "base_url": "http://localhost:8000",
-        "token": "",
-        "anthropometric_measurement_id": "1",
-        "body_composition_measurement_id": "1",
-        "device_id": "1",
-        "goal_id": "1",
-        "user_id": "1"
+        "token": ""
       },
       "dataPropertyOrder": {
-        "&": ["base_url", "token", "anthropometric_measurement_id", "body_composition_measurement_id", "device_id", "goal_id", "user_id"]
+        "&": ["base_url", "token"]
       },
       "color": "#7d69cb",
       "isPrivate": false
     },
     {
-      "_id": "fld_users",
+      "_id": "fld_auth",
       "_type": "request_group",
       "parentId": "wrk_omron",
-      "name": "Users",
-      "description": "Composite use cases for User + UserProfile. Two endpoints: register a new user with their profile in a single transaction (POST), and update an existing user and their profile together (PUT). Both run in DB::transaction so the user and profile are created/updated atomically. The register endpoint is admin-only (create policy); the update endpoint follows the standard update policy (self or admin)."
+      "name": "Auth",
+      "description": "Sanctum-based auth. login/forgot-password/reset-password are public; me/logout/logout-all require `Authorization: Bearer {{ token }}`. After login, copy `data.access_token` into the `token` env var. Forgot-password always returns 202 (no email leak); the reset link is written to storage/logs/laravel.log because MAIL_MAILER=log in dev."
     },
     {
-      "_id": "req_users_register",
+      "_id": "req_auth_login",
       "_type": "request",
-      "parentId": "fld_users",
-      "name": "Register User with Profile",
-      "description": "POST /api/users/register — composite create. Body: name (string, required), email (string, required, unique), password (string, required, min 8), sex (male|female, required), birth_date (date, required), height_reference_cm (float, optional, 0..300), activity_level (sedentary|light|moderate|active|very_active, optional). Creates the User and the UserProfile in a single transaction. Requires create policy (admin).",
+      "parentId": "fld_auth",
+      "name": "Login",
+      "description": "POST /api/auth/login — public. Body: email (string, required), password (string, required), device_name (string, optional, default 'api'). Returns 200 with {access_token, token_type: 'Bearer', token_id, name, abilities, expires_at} on success; 401 with generic 'Invalid credentials.' on bad email/password (no email-enumeration leak). After login, copy data.access_token into the `token` env var.",
       "method": "POST",
-      "url": "{{ base_url }}/api/users/register",
+      "url": "{{ base_url }}/api/auth/login",
       "headers": [
         {"name": "Content-Type", "value": "application/json"},
         {"name": "Accept", "value": "application/json"}
@@ -52,81 +47,33 @@
       "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane.doe@example.com\",\n  \"password\": \"password123\",\n  \"sex\": \"female\",\n  \"birth_date\": \"1990-05-10\",\n  \"height_reference_cm\": 165.00,\n  \"activity_level\": \"moderate\"\n}"
+        "text": "{\n  \"email\": \"root@mail.com\",\n  \"password\": \"test12345\",\n  \"device_name\": \"insomnia\"\n}"
       },
       "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
       "metaSortKey": -1
     },
     {
-      "_id": "req_users_update_with_profile",
+      "_id": "req_auth_me",
       "_type": "request",
-      "parentId": "fld_users",
-      "name": "Update User with Profile",
-      "description": "PUT /api/users/{user}/with-profile — composite update. All body fields optional (sometimes): name, email (unique excluding self), password (min 8), sex, birth_date, height_reference_cm, activity_level. Updates the User and the UserProfile in a single transaction. If profile fields are provided and the profile doesn't exist, a new profile is created (requires sex and birth_date). If no profile fields are provided, only the user is updated. Path: set `user_id` env var. Soft-deleted returns 404. Requires update policy (self or admin).",
-      "method": "PUT",
-      "url": "{{ base_url }}/api/users/{{ user_id }}/with-profile",
-      "headers": [
-        {"name": "Content-Type", "value": "application/json"},
-        {"name": "Accept", "value": "application/json"}
-      ],
-      "parameters": [],
-      "body": {"mimeType": "application/json", "text": "{\n  \"name\": \"Jane D.\",\n  \"activity_level\": \"active\"\n}"},
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -2
-    },
-    {
-      "_id": "fld_anthropometric_measurements",
-      "_type": "request_group",
-      "parentId": "wrk_omron",
-      "name": "Anthropometric Measurements",
-      "description": "CRUD for the AnthropometricMeasurement resource (1:1 with measurement_sessions). All endpoints require auth:sanctum (Bearer token). Authz: viewAny is admin-only; view/update are self (owner of the measurement_session) or admin; delete is self or super-admin; create is any authenticated user (validated against the measurement_session ownership)."
-    },
-    {
-      "_id": "req_anthropometric_measurements_index",
-      "_type": "request",
-      "parentId": "fld_anthropometric_measurements",
-      "name": "List Anthropometric Measurements",
-      "description": "GET /api/anthropometric-measurements — paginated list. Query params: per_page (1..100, default 25), page (>=1), measurement_session_id (exact match). Ordered by created_at DESC. Requires viewAny (admin).",
+      "parentId": "fld_auth",
+      "name": "Me",
+      "description": "GET /api/auth/me — auth:sanctum. Returns the authenticated user with eager-loaded roles and profile (same shape as UserResource). 401 if no/invalid token.",
       "method": "GET",
-      "url": "{{ base_url }}/api/anthropometric-measurements",
+      "url": "{{ base_url }}/api/auth/me",
       "headers": [{"name": "Accept", "value": "application/json"}],
-      "parameters": [
-        {"name": "per_page", "value": "25", "disabled": true},
-        {"name": "page", "value": "1", "disabled": true},
-        {"name": "measurement_session_id", "value": "1", "disabled": true}
-      ],
+      "parameters": [],
       "body": {},
       "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -1
-    },
-    {
-      "_id": "req_anthropometric_measurements_store",
-      "_type": "request",
-      "parentId": "fld_anthropometric_measurements",
-      "name": "Create Anthropometric Measurement",
-      "description": "POST /api/anthropometric-measurements — body: measurement_session_id (int, required, must exist and not already have an anthropometric_measurement), height_cm (float, required, 0..300), weight_kg (float, required, 0..700), bmi (float, required, 0..99.9). The measurement_session must belong to the actor (or actor is admin).",
-      "method": "POST",
-      "url": "{{ base_url }}/api/anthropometric-measurements",
-      "headers": [
-        {"name": "Content-Type", "value": "application/json"},
-        {"name": "Accept", "value": "application/json"}
-      ],
-      "parameters": [],
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"measurement_session_id\": 1,\n  \"height_cm\": 175.50,\n  \"weight_kg\": 72.300,\n  \"bmi\": 23.5\n}"
-      },
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
       "metaSortKey": -2
     },
     {
-      "_id": "req_anthropometric_measurements_show",
+      "_id": "req_auth_logout",
       "_type": "request",
-      "parentId": "fld_anthropometric_measurements",
-      "name": "Show Anthropometric Measurement",
-      "description": "GET /api/anthropometric-measurements/{anthropometric_measurement} — returns the measurement with eager-loaded measurementSession. Path: set `anthropometric_measurement_id` env var. Soft-deleted returns 404. Requires view (self or admin).",
-      "method": "GET",
-      "url": "{{ base_url }}/api/anthropometric-measurements/{{ anthropometric_measurement_id }}",
+      "parentId": "fld_auth",
+      "name": "Logout",
+      "description": "POST /api/auth/logout — auth:sanctum. Revokes ONLY the current access token (other devices stay logged in). The token used for this call is invalid immediately after.",
+      "method": "POST",
+      "url": "{{ base_url }}/api/auth/logout",
       "headers": [{"name": "Accept", "value": "application/json"}],
       "parameters": [],
       "body": {},
@@ -134,69 +81,27 @@
       "metaSortKey": -3
     },
     {
-      "_id": "req_anthropometric_measurements_update",
+      "_id": "req_auth_logout_all",
       "_type": "request",
-      "parentId": "fld_anthropometric_measurements",
-      "name": "Update Anthropometric Measurement",
-      "description": "PUT/PATCH /api/anthropometric-measurements/{anthropometric_measurement} — all fields optional (sometimes). height_cm (0..300), weight_kg (0..700), bmi (0..99.9). Soft-deleted returns 404. Requires update (self or admin).",
-      "method": "PUT",
-      "url": "{{ base_url }}/api/anthropometric-measurements/{{ anthropometric_measurement_id }}",
-      "headers": [
-        {"name": "Content-Type", "value": "application/json"},
-        {"name": "Accept", "value": "application/json"}
-      ],
+      "parentId": "fld_auth",
+      "name": "Logout All Devices",
+      "description": "POST /api/auth/logout-all — auth:sanctum. Revokes ALL access tokens for the authenticated user across every device. Response includes `tokens_revoked` count.",
+      "method": "POST",
+      "url": "{{ base_url }}/api/auth/logout-all",
+      "headers": [{"name": "Accept", "value": "application/json"}],
       "parameters": [],
-      "body": {"mimeType": "application/json", "text": "{\n  \"weight_kg\": 71.800\n}"},
+      "body": {},
       "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
       "metaSortKey": -4
     },
     {
-      "_id": "req_anthropometric_measurements_destroy",
+      "_id": "req_auth_forgot_password",
       "_type": "request",
-      "parentId": "fld_anthropometric_measurements",
-      "name": "Delete Anthropometric Measurement",
-      "description": "DELETE /api/anthropometric-measurements/{anthropometric_measurement} — soft delete. Requires delete (self or super-admin).",
-      "method": "DELETE",
-      "url": "{{ base_url }}/api/anthropometric-measurements/{{ anthropometric_measurement_id }}",
-      "headers": [{"name": "Accept", "value": "application/json"}],
-      "parameters": [],
-      "body": {},
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -5
-    },
-    {
-      "_id": "fld_body_composition_measurements",
-      "_type": "request_group",
-      "parentId": "wrk_omron",
-      "name": "Body Composition Measurements",
-      "description": "CRUD for the BodyCompositionMeasurement resource (1:1 with measurement_sessions). All endpoints require auth:sanctum. Authz: viewAny is admin-only; view/update are self (owner of the measurement_session) or admin; delete is self or super-admin; create is any authenticated user (validated against the measurement_session ownership)."
-    },
-    {
-      "_id": "req_body_composition_measurements_index",
-      "_type": "request",
-      "parentId": "fld_body_composition_measurements",
-      "name": "List Body Composition Measurements",
-      "description": "GET /api/body-composition-measurements — paginated list. Query params: per_page (1..100, default 25), page (>=1), measurement_session_id (exact match). Ordered by created_at DESC. Requires viewAny (admin).",
-      "method": "GET",
-      "url": "{{ base_url }}/api/body-composition-measurements",
-      "headers": [{"name": "Accept", "value": "application/json"}],
-      "parameters": [
-        {"name": "per_page", "value": "25", "disabled": true},
-        {"name": "page", "value": "1", "disabled": true},
-        {"name": "measurement_session_id", "value": "1", "disabled": true}
-      ],
-      "body": {},
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -1
-    },
-    {
-      "_id": "req_body_composition_measurements_store",
-      "_type": "request",
-      "parentId": "fld_body_composition_measurements",
-      "name": "Create Body Composition Measurement",
-      "description": "POST /api/body-composition-measurements — body: measurement_session_id (int, required, must exist and not already have one), body_fat_percentage (float, nullable, 0..99.9), muscle_percentage (float, nullable, 0..99.9), visceral_fat_level (int, nullable, 0..100), metabolic_age (int, nullable, 0..150), bmr_kcal (int, nullable, 0..10000). The measurement_session must belong to the actor (or actor is admin).",
+      "parentId": "fld_auth",
+      "name": "Forgot Password",
+      "description": "POST /api/auth/forgot-password — public. Body: email (string, required). Always returns 202 with a generic 'If that email is registered, a reset link has been sent.' (no enumeration leak). With MAIL_MAILER=log, the reset link is written to storage/logs/laravel.log; grep for '/api/auth/reset-password?token=' to extract the plain-text token.",
       "method": "POST",
-      "url": "{{ base_url }}/api/body-composition-measurements",
+      "url": "{{ base_url }}/api/auth/forgot-password",
       "headers": [
         {"name": "Content-Type", "value": "application/json"},
         {"name": "Accept", "value": "application/json"}
@@ -204,90 +109,19 @@
       "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"measurement_session_id\": 1,\n  \"body_fat_percentage\": 18.5,\n  \"muscle_percentage\": 42.3,\n  \"visceral_fat_level\": 8,\n  \"metabolic_age\": 25,\n  \"bmr_kcal\": 1680\n}"
+        "text": "{\n  \"email\": \"root@mail.com\"\n}"
       },
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -2
-    },
-    {
-      "_id": "req_body_composition_measurements_show",
-      "_type": "request",
-      "parentId": "fld_body_composition_measurements",
-      "name": "Show Body Composition Measurement",
-      "description": "GET /api/body-composition-measurements/{body_composition_measurement} — returns the measurement with eager-loaded measurementSession. Path: set `body_composition_measurement_id` env var. Soft-deleted returns 404. Requires view (self or admin).",
-      "method": "GET",
-      "url": "{{ base_url }}/api/body-composition-measurements/{{ body_composition_measurement_id }}",
-      "headers": [{"name": "Accept", "value": "application/json"}],
-      "parameters": [],
-      "body": {},
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -3
-    },
-    {
-      "_id": "req_body_composition_measurements_update",
-      "_type": "request",
-      "parentId": "fld_body_composition_measurements",
-      "name": "Update Body Composition Measurement",
-      "description": "PUT/PATCH /api/body-composition-measurements/{body_composition_measurement} — all fields optional (sometimes). All numeric fields nullable. Soft-deleted returns 404. Requires update (self or admin).",
-      "method": "PUT",
-      "url": "{{ base_url }}/api/body-composition-measurements/{{ body_composition_measurement_id }}",
-      "headers": [
-        {"name": "Content-Type", "value": "application/json"},
-        {"name": "Accept", "value": "application/json"}
-      ],
-      "parameters": [],
-      "body": {"mimeType": "application/json", "text": "{\n  \"body_fat_percentage\": 17.8\n}"},
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -4
-    },
-    {
-      "_id": "req_body_composition_measurements_destroy",
-      "_type": "request",
-      "parentId": "fld_body_composition_measurements",
-      "name": "Delete Body Composition Measurement",
-      "description": "DELETE /api/body-composition-measurements/{body_composition_measurement} — soft delete. Requires delete (self or super-admin).",
-      "method": "DELETE",
-      "url": "{{ base_url }}/api/body-composition-measurements/{{ body_composition_measurement_id }}",
-      "headers": [{"name": "Accept", "value": "application/json"}],
-      "parameters": [],
-      "body": {},
       "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
       "metaSortKey": -5
     },
     {
-      "_id": "fld_devices",
-      "_type": "request_group",
-      "parentId": "wrk_omron",
-      "name": "Devices",
-      "description": "CRUD for the Device resource (e.g. Omron scales, user_id is nullable for unassigned devices). All endpoints require auth:sanctum. Authz: viewAny is admin-only; view/update are self (user_id matches) or admin; delete is self or super-admin; create is any authenticated user (validated against user_id ownership)."
-    },
-    {
-      "_id": "req_devices_index",
+      "_id": "req_auth_reset_password",
       "_type": "request",
-      "parentId": "fld_devices",
-      "name": "List Devices",
-      "description": "GET /api/devices — paginated list. Query params: per_page (1..100, default 25), page (>=1), user_id (exact match), brand (ilike %term%). Ordered by created_at DESC. Requires viewAny (admin).",
-      "method": "GET",
-      "url": "{{ base_url }}/api/devices",
-      "headers": [{"name": "Accept", "value": "application/json"}],
-      "parameters": [
-        {"name": "per_page", "value": "25", "disabled": true},
-        {"name": "page", "value": "1", "disabled": true},
-        {"name": "user_id", "value": "1", "disabled": true},
-        {"name": "brand", "value": "Omron", "disabled": true}
-      ],
-      "body": {},
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -1
-    },
-    {
-      "_id": "req_devices_store",
-      "_type": "request",
-      "parentId": "fld_devices",
-      "name": "Create Device",
-      "description": "POST /api/devices — body: user_id (int, nullable, must exist if provided), brand (string, required, max 255), model (string, required, max 255), serial_number (string, nullable, max 255). The user_id must match the actor (or actor is admin).",
+      "parentId": "fld_auth",
+      "name": "Reset Password",
+      "description": "POST /api/auth/reset-password — public. Body: email (required), token (required, from the reset link), password (required, min 8, must be confirmed with password_confirmation). 200 on success; 422 with errors.token if the token is invalid/expired or already used. The token in password_reset_tokens table is the bcrypt HASH; the plain-text token is only in the email/log.",
       "method": "POST",
-      "url": "{{ base_url }}/api/devices",
+      "url": "{{ base_url }}/api/auth/reset-password",
       "headers": [
         {"name": "Content-Type", "value": "application/json"},
         {"name": "Accept", "value": "application/json"}
@@ -295,146 +129,10 @@
       "parameters": [],
       "body": {
         "mimeType": "application/json",
-        "text": "{\n  \"user_id\": 1,\n  \"brand\": \"Omron\",\n  \"model\": \"HBF-516\",\n  \"serial_number\": \"SN-12345\"\n}"
+        "text": "{\n  \"email\": \"root@mail.com\",\n  \"token\": \"REPLACE_WITH_TOKEN_FROM_LARAVEL_LOG\",\n  \"password\": \"newpassword99\",\n  \"password_confirmation\": \"newpassword99\"\n}"
       },
       "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -2
-    },
-    {
-      "_id": "req_devices_show",
-      "_type": "request",
-      "parentId": "fld_devices",
-      "name": "Show Device",
-      "description": "GET /api/devices/{device} — returns the device with eager-loaded user. Path: set `device_id` env var. Soft-deleted returns 404. Requires view (self or admin).",
-      "method": "GET",
-      "url": "{{ base_url }}/api/devices/{{ device_id }}",
-      "headers": [{"name": "Accept", "value": "application/json"}],
-      "parameters": [],
-      "body": {},
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -3
-    },
-    {
-      "_id": "req_devices_update",
-      "_type": "request",
-      "parentId": "fld_devices",
-      "name": "Update Device",
-      "description": "PUT/PATCH /api/devices/{device} — all fields optional (sometimes). Soft-deleted returns 404. Requires update (self or admin).",
-      "method": "PUT",
-      "url": "{{ base_url }}/api/devices/{{ device_id }}",
-      "headers": [
-        {"name": "Content-Type", "value": "application/json"},
-        {"name": "Accept", "value": "application/json"}
-      ],
-      "parameters": [],
-      "body": {"mimeType": "application/json", "text": "{\n  \"serial_number\": \"SN-99999\"\n}"},
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -4
-    },
-    {
-      "_id": "req_devices_destroy",
-      "_type": "request",
-      "parentId": "fld_devices",
-      "name": "Delete Device",
-      "description": "DELETE /api/devices/{device} — soft delete. Requires delete (self or super-admin).",
-      "method": "DELETE",
-      "url": "{{ base_url }}/api/devices/{{ device_id }}",
-      "headers": [{"name": "Accept", "value": "application/json"}],
-      "parameters": [],
-      "body": {},
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -5
-    },
-    {
-      "_id": "fld_goals",
-      "_type": "request_group",
-      "parentId": "wrk_omron",
-      "name": "Goals",
-      "description": "CRUD for the Goal resource (weight/body fat targets with dates and status). All endpoints require auth:sanctum. Authz: viewAny is admin-only; view/update are self (user_id matches) or admin; delete is self or super-admin; create is any authenticated user (validated against user_id ownership)."
-    },
-    {
-      "_id": "req_goals_index",
-      "_type": "request",
-      "parentId": "fld_goals",
-      "name": "List Goals",
-      "description": "GET /api/goals — paginated list. Query params: per_page (1..100, default 25), page (>=1), user_id (exact match), status (active|achieved|abandoned). Ordered by created_at DESC. Requires viewAny (admin).",
-      "method": "GET",
-      "url": "{{ base_url }}/api/goals",
-      "headers": [{"name": "Accept", "value": "application/json"}],
-      "parameters": [
-        {"name": "per_page", "value": "25", "disabled": true},
-        {"name": "page", "value": "1", "disabled": true},
-        {"name": "user_id", "value": "1", "disabled": true},
-        {"name": "status", "value": "active", "disabled": true}
-      ],
-      "body": {},
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -1
-    },
-    {
-      "_id": "req_goals_store",
-      "_type": "request",
-      "parentId": "fld_goals",
-      "name": "Create Goal",
-      "description": "POST /api/goals — body: user_id (int, required, must exist), target_weight_kg (float, nullable, 0..700), target_body_fat_percentage (float, nullable, 0..99.9), start_date (date, required), target_date (date, nullable, must be after start_date), status (active|achieved|abandoned, optional, default 'active'). The user_id must match the actor (or actor is admin).",
-      "method": "POST",
-      "url": "{{ base_url }}/api/goals",
-      "headers": [
-        {"name": "Content-Type", "value": "application/json"},
-        {"name": "Accept", "value": "application/json"}
-      ],
-      "parameters": [],
-      "body": {
-        "mimeType": "application/json",
-        "text": "{\n  \"user_id\": 1,\n  \"target_weight_kg\": 70.000,\n  \"target_body_fat_percentage\": 15.0,\n  \"start_date\": \"2026-08-04\",\n  \"target_date\": \"2026-12-31\",\n  \"status\": \"active\"\n}"
-      },
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -2
-    },
-    {
-      "_id": "req_goals_show",
-      "_type": "request",
-      "parentId": "fld_goals",
-      "name": "Show Goal",
-      "description": "GET /api/goals/{goal} — returns the goal with eager-loaded user. Path: set `goal_id` env var. Soft-deleted returns 404. Requires view (self or admin).",
-      "method": "GET",
-      "url": "{{ base_url }}/api/goals/{{ goal_id }}",
-      "headers": [{"name": "Accept", "value": "application/json"}],
-      "parameters": [],
-      "body": {},
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -3
-    },
-    {
-      "_id": "req_goals_update",
-      "_type": "request",
-      "parentId": "fld_goals",
-      "name": "Update Goal",
-      "description": "PUT/PATCH /api/goals/{goal} — all fields optional (sometimes). Soft-deleted returns 404. Requires update (self or admin).",
-      "method": "PUT",
-      "url": "{{ base_url }}/api/goals/{{ goal_id }}",
-      "headers": [
-        {"name": "Content-Type", "value": "application/json"},
-        {"name": "Accept", "value": "application/json"}
-      ],
-      "parameters": [],
-      "body": {"mimeType": "application/json", "text": "{\n  \"status\": \"achieved\"\n}"},
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -4
-    },
-    {
-      "_id": "req_goals_destroy",
-      "_type": "request",
-      "parentId": "fld_goals",
-      "name": "Delete Goal",
-      "description": "DELETE /api/goals/{goal} — soft delete. Requires delete (self or super-admin).",
-      "method": "DELETE",
-      "url": "{{ base_url }}/api/goals/{{ goal_id }}",
-      "headers": [{"name": "Accept", "value": "application/json"}],
-      "parameters": [],
-      "body": {},
-      "authentication": {"type": "bearer", "prefix": "Bearer", "token": "{{ token }}"},
-      "metaSortKey": -5
+      "metaSortKey": -6
     }
   ]
 }

@@ -40,6 +40,15 @@ class User extends Authenticatable
         return $this->hasOne(UserProfile::class);
     }
 
+    /**
+     * Normalize email on set: trim whitespace and lowercase.
+     * Keeps the DB consistent so lookups are case-insensitive.
+     */
+    public function setEmailAttribute(string $value): void
+    {
+        $this->attributes['email'] = mb_strtolower(trim($value));
+    }
+
     public function devices(): HasMany
     {
         return $this->hasMany(Device::class);
