@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\SkinfoldProtocolController;
 use App\Http\Controllers\SkinfoldSiteController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserProfileController;
@@ -15,4 +16,6 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->parameters(['user-profiles' => 'profile']);
 
     Route::apiResource('skinfold-sites', SkinfoldSiteController::class);
+
+    Route::apiResource('skinfold-protocols', SkinfoldProtocolController::class);
 });
