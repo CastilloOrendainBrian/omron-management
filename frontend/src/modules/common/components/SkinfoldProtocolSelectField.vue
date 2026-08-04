@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { useSkinfoldProtocolsQuery } from '@/modules/admin/skinfold/composables/useSkinfoldProtocolsQuery'
+import type { SkinfoldProtocol } from '@/types/api/SkinfoldProtocol'
 
 interface Props {
   modelValue: number | string | null | undefined
   inputId: string
+  protocols?: SkinfoldProtocol[]
   describedBy?: string
   invalid?: boolean
   disabled?: boolean
@@ -11,6 +12,7 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
+  protocols: () => [],
   describedBy: undefined,
   invalid: false,
   disabled: false,
@@ -20,8 +22,6 @@ withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'update:modelValue': [value: number]
 }>()
-
-const protocolsQuery = useSkinfoldProtocolsQuery({ per_page: 100 })
 </script>
 
 <template>
@@ -38,7 +38,7 @@ const protocolsQuery = useSkinfoldProtocolsQuery({ per_page: 100 })
     "
   >
     <option value="">Selecciona un protocolo</option>
-    <option v-for="p in protocolsQuery.data.value?.data ?? []" :key="p.id" :value="p.id">
+    <option v-for="p in protocols" :key="p.id" :value="p.id">
       {{ p.name }} ({{ p.sites_count }} sitios)
     </option>
   </select>

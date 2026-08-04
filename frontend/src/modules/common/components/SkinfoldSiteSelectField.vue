@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useSkinfoldSitesQuery } from '@/modules/admin/skinfold/composables/useSkinfoldSitesQuery'
 import type { SkinfoldSite } from '@/types/api/SkinfoldSite'
 
 interface Props {
@@ -21,10 +20,6 @@ withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'update:modelValue': [value: number]
 }>()
-
-// sites can be passed as a prop (parent fetched them once) to avoid N+1 queries
-// when the skinfold form has many detail rows. Falls back to a single query if not.
-const fallbackQuery = useSkinfoldSitesQuery({ per_page: 100 })
 </script>
 
 <template>
@@ -40,11 +35,7 @@ const fallbackQuery = useSkinfoldSitesQuery({ per_page: 100 })
     "
   >
     <option value="">Sitio</option>
-    <option
-      v-for="site in sites && sites.length > 0 ? sites : (fallbackQuery.data.value?.data ?? [])"
-      :key="site.id"
-      :value="site.id"
-    >
+    <option v-for="site in sites" :key="site.id" :value="site.id">
       {{ site.name }} ({{ site.code }})
     </option>
   </select>

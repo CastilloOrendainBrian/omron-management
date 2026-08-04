@@ -17,7 +17,17 @@ export interface SkinfoldProtocolListResponse {
   meta: SkinfoldProtocolListMeta
 }
 
+export interface CreateSkinfoldProtocolPayload {
+  name: string
+  sites_count: number
+  description?: string | null
+}
+
+export type UpdateSkinfoldProtocolPayload = Partial<CreateSkinfoldProtocolPayload>
+
 export interface ListSkinfoldProtocolsParams {
   page?: number
   per_page?: number
+  name?: string
+  sites_count?: number
 }

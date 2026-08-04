@@ -7,7 +7,8 @@ import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useSkinfoldMeasurementQuery } from '@/modules/admin/skinfold/composables/useSkinfoldMeasurementQuery'
 import { useCreateSkinfoldMeasurementMutation } from '@/modules/admin/skinfold/composables/useCreateSkinfoldMeasurementMutation'
 import { useUpdateSkinfoldMeasurementMutation } from '@/modules/admin/skinfold/composables/useUpdateSkinfoldMeasurementMutation'
-import { useSkinfoldSitesQuery } from '@/modules/admin/skinfold/composables/useSkinfoldSitesQuery'
+import { useSkinfoldProtocolsQuery } from '@/modules/admin/skinfold-protocol/composables/useSkinfoldProtocolsQuery'
+import { useSkinfoldSitesQuery } from '@/modules/admin/skinfold-site/composables/useSkinfoldSitesQuery'
 import { getApiErrorMessage } from '@/api/apiClient'
 import FormField from '@/modules/common/components/FormField.vue'
 import MeasurementSessionInput from '@/modules/common/components/MeasurementSessionInput.vue'
@@ -25,7 +26,6 @@ interface FormValues {
   measurement_session_id: number
   skinfold_protocol_id: number
   estimated_body_fat_percentage: number | null
-  details: DetailRow[]
 }
 
 const route = useRoute()
@@ -44,7 +44,9 @@ const measurementQuery = useSkinfoldMeasurementQuery(measurementId)
 const createMutation = useCreateSkinfoldMeasurementMutation()
 const updateMutation = useUpdateSkinfoldMeasurementMutation(measurementId.value ?? 0)
 
+const protocolsQuery = useSkinfoldProtocolsQuery({ per_page: 100 })
 const sitesQuery = useSkinfoldSitesQuery({ per_page: 100 })
+const protocols = computed(() => protocolsQuery.data.value?.data ?? [])
 const sites = computed(() => sitesQuery.data.value?.data ?? [])
 
 const details = reactive<DetailRow[]>([{ skinfold_site_id: 0, value_mm: 0 }])
@@ -55,23 +57,6 @@ function addDetail(): void {
 function removeDetail(index: number): void {
   if (details.length > 1) details.splice(index, 1)
 }
-
-const detailSchema = yup.object({
-  skinfold_site_id: yup
-    .number()
-    .typeError('Selecciona un sitio')
-    .required()
-    .positive()
-    .integer()
-    .label('sitio'),
-  value_mm: yup
-    .number()
-    .typeError('Ingresa el valor')
-    .required()
-    .min(0)
-    .max(999.9)
-    .label('valor (mm)'),
-})
 
 const schema = toTypedSchema(
   yup.object({
@@ -96,12 +81,7 @@ const schema = toTypedSchema(
       .min(0)
       .max(99.9)
       .label('% grasa estimado'),
-    details: yup
-      .array()
-      .of(detailSchema)
-      .min(1, 'Agrega al menos un sitio')
-      .required()
-      .label('detalles'),
+    // details se valida manualmente con detailsValid (ver handler)
   }),
 )
 
@@ -113,13 +93,16 @@ const { handleSubmit, isSubmitting, setErrors, setValues, resetForm } = useForm<
     measurement_session_id: 0,
     skinfold_protocol_id: 0,
     estimated_body_fat_percentage: null,
-    details: initialDetails(),
   },
 })
 
-const { value: sessionId } = useField<number>('measurement_session_id')
-const { value: protocolId } = useField<number>('skinfold_protocol_id')
-const { value: estimatedFat } = useField<number | null>('estimated_body_fat_percentage')
+const { value: sessionId, errorMessage: sessionIdError } =
+  useField<number>('measurement_session_id')
+const { value: protocolId, errorMessage: protocolIdError } =
+  useField<number>('skinfold_protocol_id')
+const { value: estimatedFat, errorMessage: estimatedFatError } = useField<number | null>(
+  'estimated_body_fat_percentage',
+)
 
 function syncDetailsToForm(rows: DetailRow[]): void {
   details.splice(0, details.length, ...rows)
@@ -133,7 +116,6 @@ watch(
         measurement_session_id: m.measurement_session_id,
         skinfold_protocol_id: m.skinfold_protocol_id,
         estimated_body_fat_percentage: m.estimated_body_fat_percentage,
-        details: initialDetails(),
       })
       if (m.details && m.details.length > 0) {
         syncDetailsToForm(
@@ -153,7 +135,6 @@ watch(isEdit, (next) => {
         measurement_session_id: 0,
         skinfold_protocol_id: 0,
         estimated_body_fat_percentage: null,
-        details: initialDetails(),
       },
     })
   }
@@ -163,6 +144,15 @@ const detailsValid = computed(() =>
   details.every((d) => d.skinfold_site_id > 0 && d.value_mm >= 0 && d.value_mm <= 999.9),
 )
 
+const detailErrors = computed<(string | null)[]>(() =>
+  details.map((d) => {
+    if (d.skinfold_site_id <= 0) return 'Selecciona un sitio'
+    if (d.value_mm < 0) return 'Debe ser ≥ 0'
+    if (d.value_mm > 999.9) return 'Debe ser ≤ 999.9'
+    return null
+  }),
+)
+
 const submitError = computed<string | null>(() => {
   const err = createMutation.error.value ?? updateMutation.error.value
   if (!err) return null
@@ -170,11 +160,7 @@ const submitError = computed<string | null>(() => {
 })
 
 const isBusy = computed(
-  () =>
-    isSubmitting.value ||
-    createMutation.isPending.value ||
-    updateMutation.isPending.value ||
-    (isEdit.value && measurementQuery.isFetching.value),
+  () => isSubmitting.value || createMutation.isPending.value || updateMutation.isPending.value,
 )
 
 function applyFieldErrors(error: unknown): void {
@@ -249,7 +235,12 @@ const onSubmit = handleSubmit((values) => {
       @submit.prevent="onSubmit"
     >
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <FormField label="ID de sesión de medición" helper-text="La sesión debe existir." required>
+        <FormField
+          label="ID de sesión de medición"
+          helper-text="La sesión debe existir."
+          required
+          :error-message="sessionIdError"
+        >
           <template #default="{ id, describedBy, invalid, disabled }">
             <MeasurementSessionInput
               v-model="sessionId"
@@ -262,11 +253,12 @@ const onSubmit = handleSubmit((values) => {
           </template>
         </FormField>
 
-        <FormField label="Protocolo" required>
+        <FormField label="Protocolo" required :error-message="protocolIdError">
           <template #default="{ id, describedBy, invalid, disabled }">
             <SkinfoldProtocolSelectField
               v-model="protocolId"
               :input-id="id"
+              :protocols="protocols"
               :described-by="describedBy"
               :invalid="invalid"
               :disabled="disabled"
@@ -276,7 +268,11 @@ const onSubmit = handleSubmit((values) => {
         </FormField>
       </div>
 
-      <FormField label="% grasa estimado" helper-text="0 a 99.9. Opcional.">
+      <FormField
+        label="% grasa estimado"
+        helper-text="0 a 99.9. Opcional."
+        :error-message="estimatedFatError"
+      >
         <template #default="{ id, describedBy, invalid, disabled }">
           <input
             :id="id"
@@ -314,40 +310,54 @@ const onSubmit = handleSubmit((values) => {
           <li
             v-for="(detail, index) in details"
             :key="index"
-            class="flex flex-col sm:flex-row sm:items-end gap-2 p-3 rounded-lg border border-stone-200 bg-stone-50/40"
+            class="p-3 rounded-lg border border-stone-200 bg-stone-50/40 space-y-2"
           >
-            <div class="flex-1 space-y-1">
-              <label :for="`site-${index}`" class="text-xs font-medium text-stone-600">Sitio</label>
-              <SkinfoldSiteSelectField
-                :input-id="`site-${index}`"
-                v-model="detail.skinfold_site_id"
-                :sites="sites"
-              />
-            </div>
-            <div class="flex-1 space-y-1">
-              <label :for="`value-${index}`" class="text-xs font-medium text-stone-600"
-                >Valor (mm)</label
+            <div class="flex flex-col sm:flex-row sm:items-end gap-2">
+              <div class="flex-1 space-y-1">
+                <label :for="`site-${index}`" class="text-xs font-medium text-stone-600"
+                  >Sitio</label
+                >
+                <SkinfoldSiteSelectField
+                  :input-id="`site-${index}`"
+                  v-model="detail.skinfold_site_id"
+                  :sites="sites"
+                  :invalid="detailErrors[index] !== null"
+                />
+              </div>
+              <div class="flex-1 space-y-1">
+                <label :for="`value-${index}`" class="text-xs font-medium text-stone-600"
+                  >Valor (mm)</label
+                >
+                <input
+                  :id="`value-${index}`"
+                  v-model.number="detail.value_mm"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="999.9"
+                  :aria-invalid="detailErrors[index] !== null ? 'true' : 'false'"
+                  class="w-full text-sm py-2 px-2.5 border rounded-lg outline-none focus:border-stone-400 placeholder:text-stone-500/60 bg-white"
+                  :class="
+                    detailErrors[index] !== null
+                      ? 'border-rose-400 focus:border-rose-500'
+                      : 'border-stone-200'
+                  "
+                  placeholder="12.5"
+                />
+              </div>
+              <button
+                type="button"
+                :disabled="details.length === 1"
+                class="inline-flex items-center justify-center w-9 h-9 rounded-md border border-rose-200 text-rose-500 hover:bg-rose-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                :aria-label="`Quitar sitio ${index + 1}`"
+                @click="removeDetail(index)"
               >
-              <input
-                :id="`value-${index}`"
-                v-model.number="detail.value_mm"
-                type="number"
-                step="0.1"
-                min="0"
-                max="999.9"
-                class="w-full text-sm py-2 px-2.5 border border-stone-200 rounded-lg outline-none focus:border-stone-400 placeholder:text-stone-500/60 bg-white"
-                placeholder="12.5"
-              />
+                <i class="ri-close-line text-lg" />
+              </button>
             </div>
-            <button
-              type="button"
-              :disabled="details.length === 1"
-              class="inline-flex items-center justify-center w-9 h-9 rounded-md border border-rose-200 text-rose-500 hover:bg-rose-50 disabled:opacity-30 disabled:cursor-not-allowed"
-              :aria-label="`Quitar sitio ${index + 1}`"
-              @click="removeDetail(index)"
-            >
-              <i class="ri-close-line text-lg" />
-            </button>
+            <p v-if="detailErrors[index]" class="text-xs text-rose-600" role="alert">
+              {{ detailErrors[index] }}
+            </p>
           </li>
         </ul>
       </div>

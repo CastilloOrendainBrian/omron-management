@@ -34,6 +34,21 @@ const adminNav: SidebarGroup[] = [
       },
     ],
   },
+  {
+    title: 'Catálogos',
+    items: [
+      {
+        label: 'Protocolos (plicometría)',
+        to: { name: 'admin-skinfold-protocols' },
+        icon: 'ri-book-mark-line',
+      },
+      {
+        label: 'Sitios (plicometría)',
+        to: { name: 'admin-skinfold-sites' },
+        icon: 'ri-map-pin-line',
+      },
+    ],
+  },
 ]
 </script>
 

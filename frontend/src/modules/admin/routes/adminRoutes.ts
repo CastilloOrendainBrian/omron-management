@@ -145,6 +145,45 @@ const adminRoutes: RouteRecordRaw[] = [
         component: () => import('@/modules/admin/skinfold/views/SkinfoldMeasurementFormView.vue'),
         meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
       },
+      {
+        path: 'skinfold-protocols',
+        name: 'admin-skinfold-protocols',
+        component: () =>
+          import('@/modules/admin/skinfold-protocol/views/SkinfoldProtocolListView.vue'),
+        meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
+      },
+      {
+        path: 'skinfold-protocols/new',
+        name: 'admin-skinfold-protocols-new',
+        component: () =>
+          import('@/modules/admin/skinfold-protocol/views/SkinfoldProtocolFormView.vue'),
+        meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
+      },
+      {
+        path: 'skinfold-protocols/:id/edit',
+        name: 'admin-skinfold-protocols-edit',
+        component: () =>
+          import('@/modules/admin/skinfold-protocol/views/SkinfoldProtocolFormView.vue'),
+        meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
+      },
+      {
+        path: 'skinfold-sites',
+        name: 'admin-skinfold-sites',
+        component: () => import('@/modules/admin/skinfold-site/views/SkinfoldSiteListView.vue'),
+        meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
+      },
+      {
+        path: 'skinfold-sites/new',
+        name: 'admin-skinfold-sites-new',
+        component: () => import('@/modules/admin/skinfold-site/views/SkinfoldSiteFormView.vue'),
+        meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
+      },
+      {
+        path: 'skinfold-sites/:id/edit',
+        name: 'admin-skinfold-sites-edit',
+        component: () => import('@/modules/admin/skinfold-site/views/SkinfoldSiteFormView.vue'),
+        meta: { requiresAuth: true, roles: ['admin', 'super-admin'] },
+      },
     ],
   },
 ]
